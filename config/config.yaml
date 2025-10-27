@@ -1,0 +1,90 @@
+# Web Scraper Configuration
+scraper:
+  timeout: 30
+  user_agent: "Mozilla/5.0 (compatible; GolfCourseBot/1.0)"
+  retry_attempts: 3
+  headers:
+    Accept: "text/html,application/json"
+  
+  # Custom selectors for different golf course websites
+  # Add site-specific configurations here
+  site_configs:
+    example_site:
+      selectors:
+        name: "h1.course-name"
+        address: ".address-block"
+        phone: "a.phone"
+        holes: ".course-details .holes"
+        par: ".course-details .par"
+
+# Satellite Imagery Configuration
+imagery:
+  cache_dir: "data/cache"
+  default_buffer_meters: 500
+  source: "NAIP"
+  
+  # NAIP-specific settings
+  naip:
+    preferred_year: null  # null for most recent
+    resolution: "1m"
+    bands:
+      - red
+      - green
+      - blue
+      - nir
+  
+  # Processing settings
+  processing:
+    ndvi_thresholds:
+      excellent: 0.6
+      good: 0.4
+      moderate: 0.2
+      poor: 0.0
+
+# AI Agent Configuration
+agent:
+  model_name: "Qwen/Qwen-VL-Chat"
+  device: "auto"  # auto, cpu, or cuda
+  load_model: false  # Set to true to load model on initialization
+  
+  # Model parameters (when loaded)
+  model_params:
+    max_length: 2048
+    temperature: 0.7
+    top_p: 0.9
+  
+  # Analysis settings
+  analysis:
+    include_imagery_analysis: true
+    include_vegetation_health: true
+    generate_recommendations: true
+    confidence_threshold: 0.5
+
+# Output Configuration
+output:
+  format: "json"  # json, yaml, or text
+  save_path: "outputs"
+  validate_schema: true
+  pretty_print: true
+  
+  # File naming
+  filename_pattern: "analysis_{timestamp}.json"
+  
+  # What to include in output
+  include:
+    metadata: true
+    raw_data: false
+    processing_steps: false
+
+# Logging Configuration
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  log_to_file: true
+  log_file: "logs/golf_assistant.log"
+
+# API Keys and Credentials (use environment variables in production)
+# Set these in .env file, not here
+credentials:
+  usgs_api_key: null  # Set via USGS_API_KEY env var
+  huggingface_token: null  # Set via HF_TOKEN env var
