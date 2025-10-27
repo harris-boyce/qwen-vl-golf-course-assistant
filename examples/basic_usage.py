@@ -16,7 +16,7 @@ def basic_example():
     print("Initializing components...")
     scraper = WebScraper()
     retriever = SatelliteRetriever()
-    agent = QwenVLAgent(load_model=False)  # Set to True to load actual model
+    agent = QwenVLAgent(enable_segmentation=True)  # Enable segmentation
     
     # Example: Scrape golf course data
     print("\n1. Web Scraping Example")
@@ -49,23 +49,40 @@ def basic_example():
     )
     print(f"Imagery metadata: {json.dumps(imagery_data.get('metadata', {}), indent=2)}")
     
+    # Example: Course Feature Segmentation
+    print("\n3. Course Feature Segmentation Example")
+    print("-" * 40)
+    print("Note: Ollama with qwen2-vl:7b model required for full segmentation")
+    print("Running fallback segmentation (install Ollama for AI-powered segmentation)")
+    seg_result = agent.segment_course_features()
+    print(f"Segmentation results:")
+    print(f"  Total features detected: {seg_result.get('total_features', 0)}")
+    print(f"  Feature types: {list(seg_result.get('feature_summary', {}).keys())}")
+    if seg_result.get('note'):
+        print(f"  Note: {seg_result['note']}")
+    
     # Example: Perform analysis
-    print("\n3. AI Analysis Example")
+    print("\n4. AI Analysis Example")
     print("-" * 40)
     analysis = agent.analyze_golf_course(
         course_data=course_data,
         imagery_data=imagery_data
     )
-    print(f"Analysis results: {json.dumps(analysis, indent=2)}")
+    
+    # Show segmentation in analysis
+    if 'segmentation' in analysis:
+        print(f"Analysis includes segmentation: {analysis['segmentation'].get('total_features', 0)} features")
+    
+    print(f"Analysis method: {analysis.get('method', 'unknown')}")
     
     # Example: Generate report
-    print("\n4. Generate Report Example")
+    print("\n5. Generate Report Example")
     print("-" * 40)
     text_report = agent.generate_report(analysis, output_format="text")
     print(text_report)
     
     # Example: Save results
-    print("\n5. Save Results")
+    print("\n6. Save Results")
     print("-" * 40)
     output_dir = Path("outputs")
     output_dir.mkdir(exist_ok=True)
@@ -143,10 +160,14 @@ if __name__ == '__main__':
         print("\n" + "=" * 50)
         print("Examples completed successfully!")
         print("\nNext steps:")
-        print("1. Customize the WebScraper for your target websites")
-        print("2. Configure NAIP data source access")
-        print("3. Load the Qwen-VL model for advanced AI analysis")
+        print("1. Install Ollama and pull qwen2-vl:7b model for AI-powered segmentation")
+        print("2. Customize the WebScraper for your target websites")
+        print("3. Configure NAIP data source access")
         print("4. Extend with additional analysis features")
+        print("\nTo enable full AI-powered segmentation:")
+        print("  1. Install Ollama: https://ollama.com/download")
+        print("  2. Pull model: ollama pull qwen2-vl:7b")
+        print("  3. Re-run examples with Ollama running")
         
     except Exception as e:
         print(f"\nError running examples: {e}")
