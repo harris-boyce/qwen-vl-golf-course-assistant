@@ -114,6 +114,51 @@ class AnalysisInsight(BaseModel):
     )
 
 
+class BoundingBox(BaseModel):
+    """Schema for bounding box coordinates."""
+    
+    x_min: float = Field(..., description="Minimum x coordinate")
+    y_min: float = Field(..., description="Minimum y coordinate")
+    x_max: float = Field(..., description="Maximum x coordinate")
+    y_max: float = Field(..., description="Maximum y coordinate")
+
+
+class CourseFeature(BaseModel):
+    """Schema for a detected golf course feature."""
+    
+    feature_type: str = Field(
+        ...,
+        description="Type of feature (tee_box, green, fairway, sand_hazard, water_hazard, rough, cart_path)"
+    )
+    bounding_box: BoundingBox = Field(..., description="Bounding box coordinates")
+    confidence: confloat(ge=0, le=1) = Field(..., description="Detection confidence score")
+    area_sqm: Optional[float] = Field(None, description="Feature area in square meters")
+    condition: Optional[str] = Field(None, description="Feature condition assessment")
+    notes: Optional[str] = Field(None, description="Additional notes about the feature")
+
+
+class SegmentationResult(BaseModel):
+    """Schema for image segmentation results."""
+    
+    features: List[CourseFeature] = Field(
+        default_factory=list,
+        description="Detected golf course features"
+    )
+    total_features: int = Field(..., description="Total number of detected features")
+    feature_summary: Dict[str, int] = Field(
+        default_factory=dict,
+        description="Count of each feature type"
+    )
+    segmentation_confidence: confloat(ge=0, le=1) = Field(
+        ...,
+        description="Overall segmentation confidence"
+    )
+    processing_time_seconds: Optional[float] = Field(
+        None,
+        description="Time taken for segmentation"
+    )
+
+
 class GolfCourseAnalysisResult(BaseModel):
     """Complete schema for golf course analysis output."""
     
@@ -122,6 +167,9 @@ class GolfCourseAnalysisResult(BaseModel):
     imagery_data: Optional[SatelliteImagery] = Field(None, description="Satellite imagery data")
     vegetation_analysis: Optional[VegetationAnalysis] = Field(
         None, description="Vegetation health analysis"
+    )
+    segmentation: Optional[SegmentationResult] = Field(
+        None, description="Course feature segmentation results"
     )
     recommendations: List[Recommendation] = Field(
         default_factory=list, description="Recommendations"

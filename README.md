@@ -17,11 +17,13 @@ An extensible AI agent that integrates web scraping, satellite imagery analysis,
 - Vegetation health assessment
 - Support for multiple spectral bands (RGB + NIR)
 
-🤖 **AI-Powered Analysis**
-- Integration with Qwen3-VL large language model
+🤖 **AI-Powered Analysis with Qwen3-VL**
+- Integration with Qwen3-VL via Ollama
+- **Course feature segmentation** (tee boxes, greens, hazards, fairways, rough, cart paths)
 - Intelligent reasoning about course conditions
 - Automated recommendation generation
 - Multi-modal analysis (text + imagery)
+- Fallback rule-based analysis when model unavailable
 
 📊 **Structured Output**
 - Pydantic-based schema validation
@@ -34,7 +36,7 @@ An extensible AI agent that integrates web scraping, satellite imagery analysis,
 ### Prerequisites
 - Python 3.8 or higher
 - pip package manager
-- (Optional) CUDA-capable GPU for model inference
+- (Optional) Ollama for Qwen3-VL model - [Install Ollama](https://ollama.com/download)
 
 ### Basic Installation
 
@@ -90,11 +92,12 @@ golf-assistant export-schema --output schema.json
 
 ```python
 from golf_assistant import QwenVLAgent, WebScraper, SatelliteRetriever
+from pathlib import Path
 
 # Initialize components
 scraper = WebScraper()
 retriever = SatelliteRetriever()
-agent = QwenVLAgent(load_model=False)  # Set True to load model
+agent = QwenVLAgent(enable_segmentation=True)  # Enable course feature segmentation
 
 # Scrape course data
 course_data = scraper.scrape_golf_course("https://example-golf-course.com")
@@ -106,15 +109,41 @@ imagery_data = retriever.get_naip_imagery(
     buffer_meters=500
 )
 
-# Perform analysis
+# Perform analysis with segmentation
 analysis = agent.analyze_golf_course(
     course_data=course_data,
-    imagery_data=imagery_data
+    imagery_data=imagery_data,
+    image_path=Path("satellite_image.png")  # For segmentation
 )
+
+# Access segmentation results
+if 'segmentation' in analysis:
+    seg = analysis['segmentation']
+    print(f"Detected {seg['total_features']} features")
+    print(f"Feature types: {seg['feature_summary']}")
+    
+    # Examine individual features
+    for feature in seg['features']:
+        print(f"{feature['feature_type']}: confidence {feature['confidence']}")
 
 # Generate report
 report = agent.generate_report(analysis, output_format="markdown")
 print(report)
+```
+
+### Setting Up Ollama with Qwen3-VL
+
+To enable AI-powered segmentation and analysis:
+
+```bash
+# Install Ollama (if not already installed)
+# Visit https://ollama.com/download
+
+# Pull the Qwen3-VL model
+ollama pull qwen2-vl:7b
+
+# Verify installation
+ollama list
 ```
 
 ### Using Configuration Files
@@ -180,9 +209,10 @@ qwen-vl-golf-course-assistant/
 - Image export functionality
 
 #### 3. AI Agent (`agent/`)
-- `QwenVLAgent`: Qwen-VL integration
-- Multi-modal analysis
-- Rule-based fallback when model not loaded
+- `QwenVLAgent`: Qwen3-VL integration via Ollama
+- **Course feature segmentation** (tee boxes, greens, hazards, etc.)
+- Multi-modal vision-language analysis
+- Rule-based fallback when Ollama/model not available
 - Structured output generation
 
 #### 4. Schemas (`schemas/`)
@@ -256,6 +286,48 @@ analysis = retriever.analyze_vegetation_health(ndvi)
 # Export visualization
 retriever.export_ndvi_image(ndvi, "outputs/ndvi.png")
 ```
+
+### Course Feature Segmentation
+
+```python
+from golf_assistant import QwenVLAgent
+from pathlib import Path
+import numpy as np
+
+# Initialize agent with segmentation enabled
+agent = QwenVLAgent(enable_segmentation=True)
+
+# Segment features from image file
+seg_result = agent.segment_course_features(
+    image_path=Path("course_satellite.png")
+)
+
+# Or from numpy array
+image_array = np.array(...)  # Your image data
+seg_result = agent.segment_course_features(
+    image_data=image_array
+)
+
+# Access results
+print(f"Total features: {seg_result['total_features']}")
+print(f"Feature summary: {seg_result['feature_summary']}")
+
+# Examine individual features
+for feature in seg_result['features']:
+    print(f"Type: {feature['feature_type']}")
+    print(f"Confidence: {feature['confidence']}")
+    print(f"Bounding box: {feature['bounding_box']}")
+    print(f"Condition: {feature.get('condition', 'N/A')}")
+```
+
+**Detected Feature Types:**
+- `tee_box` - Tee boxes
+- `green` - Putting greens
+- `fairway` - Fairways
+- `sand_hazard` - Sand bunkers
+- `water_hazard` - Water hazards
+- `rough` - Rough areas
+- `cart_path` - Cart paths
 
 ### Schema Validation
 

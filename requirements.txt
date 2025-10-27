@@ -10,10 +10,8 @@ pyproj>=3.6.0
 shapely>=2.0.0
 pillow>=10.0.0
 
-# AI/ML for Qwen-VL integration
-transformers>=4.35.0
-torch>=2.0.0
-torchvision>=0.15.0
+# AI/ML for Qwen-VL integration via Ollama
+ollama>=0.1.0
 
 # JSON schema validation
 jsonschema>=4.19.0
